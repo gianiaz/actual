@@ -55,6 +55,7 @@ export type AccountHandlers = {
   'gocardless-poll-web-token': typeof pollGoCardlessWebToken;
   'gocardless-poll-web-token-stop': typeof stopGoCardlessWebTokenPolling;
   'gocardless-status': typeof goCardlessStatus;
+  'enablebanking-status': typeof enableBankingStatus;
   'simplefin-status': typeof simpleFinStatus;
   'pluggyai-status': typeof pluggyAiStatus;
   'simplefin-accounts': typeof simpleFinAccounts;
@@ -626,6 +627,26 @@ async function stopGoCardlessWebTokenPolling() {
 }
 
 async function goCardlessStatus() {
+  const userToken = await asyncStorage.getItem('user-token');
+
+  if (!userToken) {
+    return { error: 'unauthorized' };
+  }
+
+  const serverConfig = getServer();
+  if (!serverConfig) {
+    throw new Error('Failed to get server config.');
+  }
+
+  return post(
+    serverConfig.GOCARDLESS_SERVER + '/status',
+    {},
+    {
+      'X-ACTUAL-TOKEN': userToken,
+    },
+  );
+}
+async function enableBankingStatus() {
   const userToken = await asyncStorage.getItem('user-token');
 
   if (!userToken) {
@@ -1229,6 +1250,7 @@ app.method('secret-check', checkSecret);
 app.method('gocardless-poll-web-token', pollGoCardlessWebToken);
 app.method('gocardless-poll-web-token-stop', stopGoCardlessWebTokenPolling);
 app.method('gocardless-status', goCardlessStatus);
+app.method('enablebanking-status', enableBankingStatus);
 app.method('simplefin-status', simpleFinStatus);
 app.method('pluggyai-status', pluggyAiStatus);
 app.method('simplefin-accounts', simpleFinAccounts);

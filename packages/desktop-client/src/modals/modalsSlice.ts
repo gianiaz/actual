@@ -8,6 +8,7 @@ import {
   type CategoryEntity,
   type CategoryGroupEntity,
   type GoCardlessToken,
+  type EnableBankingToken,
   type NewRuleEntity,
   type RuleEntity,
   type ScheduleEntity,
@@ -98,6 +99,12 @@ export type Modal =
       };
     }
   | {
+      name: 'enablebanking-init'
+      options: {
+        onSuccess: () => void;
+      };
+    }
+  | {
       name: 'simplefin-init';
       options: {
         onSuccess: () => void;
@@ -121,6 +128,20 @@ export type Modal =
         >;
         onClose?: (() => void) | undefined;
         onSuccess: (data: GoCardlessToken) => Promise<void>;
+      };
+    }
+      | {
+      name: 'enablebanking-external-msg';
+      options: {
+        onMoveExternal: (arg: {
+          institutionId: string;
+        }) => Promise<
+          | { error: 'timeout' }
+          | { error: 'unknown'; message?: string }
+          | { data: EnableBankingToken }
+        >;
+        onClose?: (() => void) | undefined;
+        onSuccess: (data: EnableBankingToken) => Promise<void>;
       };
     }
   | {
