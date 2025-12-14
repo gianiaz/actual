@@ -26,12 +26,12 @@ import { FormField, FormLabel } from '@desktop-client/components/forms';
 import { COUNTRY_OPTIONS } from '@desktop-client/components/util/countries';
 import { getCountryFromBrowser } from '@desktop-client/components/util/localeToCountry';
 import { useGlobalPref } from '@desktop-client/hooks/useGlobalPref';
-import { useGoCardlessStatus } from '@desktop-client/hooks/useGoCardlessStatus';
 import {
   type Modal as ModalType,
   pushModal,
 } from '@desktop-client/modals/modalsSlice';
 import { useDispatch } from '@desktop-client/redux';
+import { useEnableBankingStatus } from '@desktop-client/hooks/useEnableBankingStatus';
 
 function useAvailableBanks(country: string) {
   const [banks, setBanks] = useState<EnableBankingInstitution[]>([]);
@@ -50,7 +50,7 @@ function useAvailableBanks(country: string) {
 
       setIsLoading(true);
 
-      const { data, error } = await sendCatch('gocardless-get-banks', country);
+      const { data, error } = await sendCatch('enablebanking-get-banks', country);
 
       if (error || !Array.isArray(data)) {
         setIsError(true);
@@ -88,16 +88,16 @@ function renderError(
   );
 }
 
-type GoCardlessExternalMsgModalProps = Extract<
+type EnableBankingExternalMsgModalProps = Extract<
   ModalType,
-  { name: 'gocardless-external-msg' }
+  { name: 'enablebanking-external-msg' }
 >['options'];
 
-export function GoCardlessExternalMsgModal({
+export function EnableBankingExternalMsgModal({
   onMoveExternal,
   onSuccess,
   onClose,
-}: GoCardlessExternalMsgModalProps) {
+}: EnableBankingExternalMsgModalProps) {
   const { t } = useTranslation();
 
   const dispatch = useDispatch();
@@ -120,10 +120,10 @@ export function GoCardlessExternalMsgModal({
     code: 'unknown' | 'timeout';
     message?: string;
   } | null>(null);
-  const [isGoCardlessSetupComplete, setIsGoCardlessSetupComplete] = useState<
+  const [isEnableBankingSetupComplete, setIsEnableBankingSetupComplete] = useState<
     boolean | null
   >(null);
-  const data = useRef<GoCardlessToken | null>(null);
+  const data = useRef<EnableBankingToken | null>(null);
 
   const {
     data: bankOptions,
@@ -131,9 +131,9 @@ export function GoCardlessExternalMsgModal({
     isError: isBankOptionError,
   } = useAvailableBanks(country);
   const {
-    configuredGoCardless: isConfigured,
+    configuredEnableBanking: isConfigured,
     isLoading: isConfigurationLoading,
-  } = useGoCardlessStatus();
+  } = useEnableBankingStatus();
 
   async function onJump() {
     setError(null);
@@ -160,13 +160,13 @@ export function GoCardlessExternalMsgModal({
     setWaiting(null);
   }
 
-  const onGoCardlessInit = () => {
+  const onEnableBankingInit = () => {
     dispatch(
       pushModal({
         modal: {
           name: 'gocardless-init',
           options: {
-            onSuccess: () => setIsGoCardlessSetupComplete(true),
+            onSuccess: () => setIsEnableBankingSetupComplete(true),
           },
         },
       }),
@@ -271,7 +271,7 @@ export function GoCardlessExternalMsgModal({
 
   return (
     <Modal
-      name="gocardless-external-msg"
+      name="enablebanking-external-msg"
       onClose={onClose}
       containerProps={{ style: { width: '30vw' } }}
     >

@@ -101,7 +101,7 @@ export const EnableBankingInitialiseModal = ({
                   to="https://actualbudget.org/docs/advanced/bank-sync/"
                   linkColor="purple"
                 >
-                  GoCardless
+                  EnableBanking
                 </Link>
                 .
               </Trans>

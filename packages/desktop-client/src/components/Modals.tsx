@@ -38,6 +38,7 @@ import { FixEncryptionKeyModal } from './modals/FixEncryptionKeyModal';
 import { GoalTemplateModal } from './modals/GoalTemplateModal';
 import { GoCardlessExternalMsgModal } from './modals/GoCardlessExternalMsgModal';
 import { GoCardlessInitialiseModal } from './modals/GoCardlessInitialiseModal';
+import { EnableBankingExternalMsgModal } from './modals/EnableBankingExternalMsgModal';
 import { EnableBankingInitialiseModal } from './modals/EnableBankingInitialiseModal';
 import { HoldBufferModal } from './modals/HoldBufferModal';
 import { ImportTransactionsModal } from './modals/ImportTransactionsModal';
@@ -188,6 +189,18 @@ export function Modals() {
               onClose={() => {
                 modal.options.onClose?.();
                 send('gocardless-poll-web-token-stop');
+              }}
+            />
+          );
+
+        case 'enablebanking-external-msg':
+          return (
+            <EnableBankingExternalMsgModal
+              key={key}
+              {...modal.options}
+              onClose={() => {
+                modal.options.onClose?.();
+                send('enablebanking-poll-web-token-stop');
               }}
             />
           );

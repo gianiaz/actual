@@ -72,9 +72,9 @@ export function CreateAccountModal({
     }
 
     if (upgradingAccountId == null) {
-      authorizeBank(dispatch);
+      authorizeEnableBanking(dispatch);
     } else {
-      authorizeBank(dispatch);
+      authorizeEnableBanking(dispatch);
     }
   };
 

@@ -18,6 +18,7 @@ import {
   SyncServerPluggyAiAccount,
   type GoCardlessToken,
   ImportTransactionEntity,
+  EnableBankingToken,
 } from '../../types/models';
 import { createApp } from '../app';
 import * as db from '../db';
@@ -55,13 +56,17 @@ export type AccountHandlers = {
   'gocardless-poll-web-token': typeof pollGoCardlessWebToken;
   'gocardless-poll-web-token-stop': typeof stopGoCardlessWebTokenPolling;
   'gocardless-status': typeof goCardlessStatus;
+  'enablebanking-poll-web-token': typeof pollEnableBankingWebToken;
+  'enablebanking-poll-web-token-stop': typeof stopGoCardlessWebTokenPolling;
   'enablebanking-status': typeof enableBankingStatus;
   'simplefin-status': typeof simpleFinStatus;
   'pluggyai-status': typeof pluggyAiStatus;
   'simplefin-accounts': typeof simpleFinAccounts;
   'pluggyai-accounts': typeof pluggyAiAccounts;
   'gocardless-get-banks': typeof getGoCardlessBanks;
-  'gocardless-create-web-token': typeof createGoCardlessWebToken;
+  'gocardless-create-web-token': typeof createEnableBankingWebToken;
+  'enablebanking-get-banks': typeof getEnableBankingBanks;
+  'enablebanking-create-web-token': typeof createGoCardlessWebToken;
   'accounts-bank-sync': typeof accountsBankSync;
   'simplefin-batch-sync': typeof simpleFinBatchSync;
   'transactions-import': typeof importTransactions;
@@ -626,6 +631,87 @@ async function stopGoCardlessWebTokenPolling() {
   return 'ok';
 }
 
+
+async function pollEnableBankingWebToken({
+  requisitionId,
+}: {
+  requisitionId: string;
+}) {
+  const userToken = await asyncStorage.getItem('user-token');
+  if (!userToken) return { error: 'unknown' };
+
+  const startTime = Date.now();
+  stopPolling = false;
+
+  async function getData(
+    cb: (
+      data:
+        | { status: 'timeout' }
+        | { status: 'unknown'; message?: string }
+        | { status: 'success'; data: EnableBankingToken },
+    ) => void,
+  ) {
+    if (stopPolling) {
+      return;
+    }
+
+    if (Date.now() - startTime >= 1000 * 60 * 10) {
+      cb({ status: 'timeout' });
+      return;
+    }
+
+    const serverConfig = getServer();
+    if (!serverConfig) {
+      throw new Error('Failed to get server config.');
+    }
+
+    const data = await post(
+      serverConfig.GOCARDLESS_SERVER + '/get-accounts',
+      {
+        requisitionId,
+      },
+      {
+        'X-ACTUAL-TOKEN': userToken,
+      },
+    );
+
+    if (data) {
+      if (data.error_code) {
+        logger.error('Failed linking enablebanking account:', data);
+        cb({ status: 'unknown', message: data.error_type });
+      } else {
+        cb({ status: 'success', data });
+      }
+    } else {
+      setTimeout(() => getData(cb), 3000);
+    }
+  }
+
+  return new Promise(resolve => {
+    getData(data => {
+      if (data.status === 'success') {
+        resolve({ data: data.data });
+        return;
+      }
+
+      if (data.status === 'timeout') {
+        resolve({ error: data.status });
+        return;
+      }
+
+      resolve({
+        error: data.status,
+        message: data.message,
+      });
+    });
+  });
+}
+
+async function stopEnableBankingWebTokenPolling() {
+  stopPolling = true;
+  return 'ok';
+}
+
 async function goCardlessStatus() {
   const userToken = await asyncStorage.getItem('user-token');
 
@@ -782,7 +868,63 @@ async function getGoCardlessBanks(country: string) {
   );
 }
 
+async function getEnableBankingBanks(country: string) {
+  const userToken = await asyncStorage.getItem('user-token');
+
+  if (!userToken) {
+    return { error: 'unauthorized' };
+  }
+
+  const serverConfig = getServer();
+  if (!serverConfig) {
+    throw new Error('Failed to get server config.');
+  }
+
+  return post(
+    serverConfig.GOCARDLESS_SERVER + '/get-banks',
+    { country, showDemo: isNonProductionEnvironment() },
+    {
+      'X-ACTUAL-TOKEN': userToken,
+    },
+  );
+}
+
 async function createGoCardlessWebToken({
+  institutionId,
+  accessValidForDays,
+}: {
+  institutionId: string;
+  accessValidForDays: number;
+}) {
+  const userToken = await asyncStorage.getItem('user-token');
+
+  if (!userToken) {
+    return { error: 'unauthorized' };
+  }
+
+  const serverConfig = getServer();
+  if (!serverConfig) {
+    throw new Error('Failed to get server config.');
+  }
+
+  try {
+    return await post(
+      serverConfig.GOCARDLESS_SERVER + '/create-web-token',
+      {
+        institutionId,
+        accessValidForDays,
+      },
+      {
+        'X-ACTUAL-TOKEN': userToken,
+      },
+    );
+  } catch (error) {
+    logger.error(error);
+    return { error: 'failed' };
+  }
+}
+
+async function createEnableBankingWebToken({
   institutionId,
   accessValidForDays,
 }: {

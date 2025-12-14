@@ -12,6 +12,7 @@ import { View } from '@actual-app/components/view';
 import {
   type AccountEntity,
   type SyncServerGoCardlessAccount,
+  type SyncServerEnableBankingAccount,
   type SyncServerPluggyAiAccount,
   type SyncServerSimpleFinAccount,
 } from 'loot-core/types/models';
@@ -64,6 +65,11 @@ export type SelectLinkedAccountsModalProps =
       requisitionId: string;
       externalAccounts: SyncServerGoCardlessAccount[];
       syncSource: 'goCardless';
+    }
+  | {
+      requisitionId: string;
+      externalAccounts: SyncServerEnableBankingAccount[];
+      syncSource: 'enableBanking';
     }
   | {
       requisitionId?: undefined;
