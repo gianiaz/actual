@@ -164,7 +164,7 @@ export function EnableBankingExternalMsgModal({
     dispatch(
       pushModal({
         modal: {
-          name: 'gocardless-init',
+          name: 'enablebanking-init',
           options: {
             onSuccess: () => setIsEnableBankingSetupComplete(true),
           },
@@ -342,7 +342,7 @@ export function EnableBankingExternalMsgModal({
               <>
                 <Paragraph style={{ color: theme.errorText }}>
                   <Trans>
-                    EnableBanking integration has not yet been configured.
+                    --{{isConfigured}}--{{isEnableBankingSetupComplete}}-- EnableBanking integration has not yet been configured.
                   </Trans>
                 </Paragraph>
                 <Button variant="primary" onPress={onEnableBankingInit}>
